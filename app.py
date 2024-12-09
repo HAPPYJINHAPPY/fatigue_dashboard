@@ -4,9 +4,10 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
 from flask import Flask, request, jsonify
 import joblib
+from flask_cors import CORS
 
 # Load the uploaded file
-file_path = 'D:/pythonProject3/corrected_fatigue_simulation_data.csv'
+file_path = 'C:/Users\X2006936/fatigue_dashboard/corrected_fatigue_simulation_data.csv'
 data = pd.read_csv(file_path)
 
 # 1. 特征和标签
@@ -28,24 +29,39 @@ accuracy = accuracy_score(y_test, y_pred)
 conf_matrix = confusion_matrix(y_test, y_pred)
 report = classification_report(y_test, y_pred)
 
-# 保存模型
-joblib.dump(model, 'fatigue_model.pkl')
-app = Flask(__name__)
+# 训练模型后保存路径
+MODEL_PATH = 'fatigue_model.pkl'
 
-# 加载模型
-model = joblib.load('fatigue_model.pkl')
+# 检查模型文件是否存在并加载
+try:
+    model = joblib.load(MODEL_PATH)
+except FileNotFoundError:
+    raise RuntimeError(f"Model file not found at {MODEL_PATH}. Ensure the model is trained and saved.")
+
+app = Flask(__name__)
+CORS(app)  # 允许跨域访问
+
+@app.route('/')
+def home():
+    return "Welcome to the Fatigue Prediction API!"
 
 @app.route('/predict', methods=['POST'])
 def predict():
-    # 获取前端传来的数据
+    # 检查请求内容是否为 JSON
+    if not request.is_json:
+        return jsonify({'error': 'Request content must be JSON'}), 400
+
     input_data = request.json  # 假设为 JSON 格式
-    print(123)
-    print(input_data)
-    df = pd.DataFrame([input_data])  # 转换为 DataFrame
-    prediction = model.predict(df)
-    print(prediction)
-    return jsonify({'prediction': int(prediction[0])})
+    if not input_data:
+        return jsonify({'error': 'No input data provided'}), 400
+
+    try:
+        # 将输入数据转化为 DataFrame
+        df = pd.DataFrame([input_data])
+        prediction = model.predict(df)
+        return jsonify({'prediction': int(prediction[0])}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True)
- 
+    app.run(debug=False, host='0.0.0.0', port=5000)
