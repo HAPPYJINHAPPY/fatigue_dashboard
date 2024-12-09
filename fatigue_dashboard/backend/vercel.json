@@ -2,14 +2,14 @@
   "version": 2,
   "builds": [
     {
-      "src": "app.py",
+      "src": "fatigue_dashboard/backend/app.py",
       "use": "@vercel/python"
     }
   ],
   "routes": [
     {
-      "src": "/.*",
-      "dest": "app.py"
+      "src": "/(.*)",
+      "dest": "fatigue_dashboard/backend/app.py"
     }
   ]
 }
