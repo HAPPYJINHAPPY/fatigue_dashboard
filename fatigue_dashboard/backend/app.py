@@ -2,6 +2,7 @@ import pandas as pd
 from flask import Flask, request, jsonify
 import joblib
 from flask_cors import CORS
+import os
 
 # 训练模型后保存路径
 MODEL_PATH = 'fatigue_model.pkl'
@@ -38,4 +39,5 @@ def predict():
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(debug=False, host='0.0.0.0', port=5000)
+    port = int(os.environ.get("PORT", 5000))  # Vercel 会提供端口
+    app.run(debug=False, host='0.0.0.0', port=port)
